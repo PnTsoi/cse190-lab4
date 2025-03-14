@@ -20,6 +20,7 @@ int main(int argc, char* argv[]) {
     size_t         len;
     struct shmbuf  *shmp;
     struct readbuf read;
+    int head = 0;
 
     // lock process onto CPU
     CPU_SET(READER_CPU, &set);
@@ -52,23 +53,23 @@ int main(int argc, char* argv[]) {
         return -1;
     
     bool cnt_check = false;
-    int caught = 0;
+    int cnt = 0;
 
-    // Starts reading
-    for(int i = CACHE_SIZE-1; i < BUF_SIZE; i += CACHE_SIZE) {
-        while (shmp->buf[i] == 0)  {// spin, wait for writer to catch up, creating a slip space between the two
-            if(cnt_check == false) {cnt_check=true; caught++; cout<<i<<'\n';} // count number of times it got caught
-        }
+    unsigned char data[CACHE_SIZE] = {0};
 
-        cnt_check = false;
+    // Starts consuming
+    while (cnt < 1000) {
+        while(shmp->buf[head+CACHE_SIZE-1] == 0); // spin
 
-        for(int j = i-CACHE_SIZE+1; j <= i; j++) {
-            read.buf[j] = shmp->buf[j];
-        }
+        for(int i = head; i < head+CACHE_SIZE; i++) data[i-head] = shmp->buf[i]; // consume
+
+        shmp->buf[head+CACHE_SIZE-1] = 0; // set entry as empty, aka dequeue
+
+        cnt++;
+        cout<<cnt<<' ';
+
+        head = (head+CACHE_SIZE)%BUF_SIZE; // move head
     }
-
-
-    cout<< caught<<'\n';
 
 
     shm_unlink(shmpath);

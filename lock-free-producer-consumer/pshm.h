@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 
-#define BUF_SIZE 4096   /* Maximum size for exchanged string */
+#define BUF_SIZE 1024   /* Maximum size for exchanged string */
 
 #define CACHE_SIZE 64 // size of cache
 

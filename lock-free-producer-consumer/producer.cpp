@@ -19,6 +19,7 @@ int main(int argc, char* argv[]) {
     char *shmpath;
     cpu_set_t     set;
     struct shmbuf *shmp;
+    int tail = 0;
 
     shmpath = (char*) malloc(strlen(SHM_PATH)+1); 
     if(shmpath == NULL) return -1;
@@ -62,7 +63,7 @@ int main(int argc, char* argv[]) {
         // errExit("sem_init-in_sync");
         return -1;
 
-    /* Starts writing into shared memory the first 8 cache-line to create
+    /* Starts writing into shared memory the first SLIP_SIZE cache-line to create
     a slip space before waking up the reader */
 
     for(int i = 0; i < SLIP_SIZE * CACHE_SIZE; i++) // 
@@ -77,8 +78,17 @@ int main(int argc, char* argv[]) {
 
     /* Starts writing to the end of buffer */
 
-    for(int i = SLIP_SIZE * CACHE_SIZE; i < BUF_SIZE; i++) // 
-        shmp->buf[i] = 255;
+    tail = SLIP_SIZE*CACHE_SIZE;
+    int cnt = 0;
+
+    while(cnt < 1000-8) {
+        while(shmp->buf[tail+CACHE_SIZE-1] != 0); // spin
+        for(int i = tail; i < tail+CACHE_SIZE; i++) shmp->buf[i] = 255; // produce, or write
+        tail = (tail+CACHE_SIZE) % BUF_SIZE; // move head
+        cnt++;
+        cout<<cnt<<' ';
+    }
+
 
 
     shm_unlink(shmpath); // unlink the shared memory
