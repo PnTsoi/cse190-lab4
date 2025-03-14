@@ -17,18 +17,18 @@ int main() {
             errExit("shm open error")
     }
 
+    if(ftruncate(fd, sizeof(struct shmbuf)) == -1)
+        errExit("ftruncate");
+
     // Create mmap
     struct shmbuf* shmap = (struct shmbuf*) mmap(NULL, sizeof(*shmap), 
             PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if(shmap == MAP_FAILED)
         errExit("mmap error")
 
-    // Initialize semaphores (if they haven't already been initialized)
-    int value;
-    if(sem_getvalue(&shmap->sem, &value) == -1 && errno == EINVAL) {
-        if(sem_init(&shmap->sem, 1, 0) == -1)
-            errExit("sem_init-sem1");
-    }
+    // Initialize semaphore
+    if(sem_init(&shmap->sem, 1, 0) == -1)
+        errExit("sem_init-sem1");
 
     // Wait for data
     if(sem_wait(&shmap->sem) == -1)
