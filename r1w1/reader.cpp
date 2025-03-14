@@ -16,53 +16,68 @@ int main(int argc, char* argv[]) {
 
     int            fd;
     char           *shmpath, *string;
+    cpu_set_t     set;
     size_t         len;
     struct shmbuf  *shmp;
     struct readbuf read;
 
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s /shm-path string\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
+    // lock process onto CPU
+    CPU_SET(READER_CPU, &set);
+    if (sched_setaffinity(getpid(), sizeof(set), &set) == -1) return -1;
 
-    shmpath = argv[1];
-    string = argv[2];
-    len = strlen(string);
+    shmpath = (char*) malloc(strlen(SHM_PATH)+1);
+    if(shmpath == NULL) return -1;
+    strcpy(shmpath, SHM_PATH);
 
-    if (len > BUF_SIZE) {
-        fprintf(stderr, "String is too long\n");
-        exit(EXIT_FAILURE);
-    }
 
     /* Open the existing shared memory object and map it
         into the caller's address space. */
 
     fd = shm_open(shmpath, O_RDWR, 0);
     if (fd == -1)
-        errExit("shm_open");
+        // errExit("shm_open");
+        return -1;
 
-    shmp = mmap(NULL, sizeof(*shmp), PROT_READ | PROT_WRITE,
-                MAP_SHARED, fd, 0);
+    shmp = static_cast<shmbuf*>(mmap(NULL, sizeof(*shmp), PROT_READ | PROT_WRITE,
+                MAP_SHARED, fd, 0));
     if (shmp == MAP_FAILED)
-        errExit("mmap");
+        // errExit("mmap");
+        return -1;
 
 
-    /* Tell peer that it can now access shared memory. */
+    /* Tell peer that it can now write shared memory. */
 
-    if (sem_post(&shmp->sem1) == -1)
-        errExit("sem_post");
+    if (sem_post(&shmp->in_sync) == -1)
+        // errExit("sem_post");
+        return -1;
+    
+    bool cnt_check = false;
+    int caught = 0;
 
     // Starts reading
     for(int i = CACHE_SIZE-1; i < BUF_SIZE; i += CACHE_SIZE) {
-        while (shmp->buf[i] == 0) {
-            // spin, wait for writer to catch up, creating a slip space between the two
+        while (shmp->buf[i] == 0)  {// spin, wait for writer to catch up, creating a slip space between the two
+            if(cnt_check == false) {cnt_check=true; caught++;} // count number of times it got caught
         }
 
-        for(int j = i-CACHE_SIZE+1; j < CACHE_SIZE; j++)
-            read->buf[i] = shmp->buf[i];
+        cnt_check = false;
+
+        for(int j = i-CACHE_SIZE+1; j <= i; j++) {
+            read.buf[j] = shmp->buf[j];
+            // cout<<(int) shmp->buf[i]<<' ';
+            // if(read.buf[i] == 255)
+            //     cout<< i <<' ';
+        }
     }
 
+    // for(int i = 0; i < BUF_SIZE; i++) {
+    //     if(read.buf[i] != 255) cout<<i<<' ';
+    // }
 
+    cout<< caught<<'\n';
+
+
+    shm_unlink(shmpath);
 
     return 0;
 }
