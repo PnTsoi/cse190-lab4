@@ -15,8 +15,6 @@
 
 #define NUM_CPU 6 // 3 writers, 3 consumers
 
-#define WRITER_CPU 0
-#define READER_CPU 1
 #define SERVER_CPU 6
 
 #define SHM_PATH "/shm"
