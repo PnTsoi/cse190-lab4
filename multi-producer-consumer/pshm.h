@@ -7,13 +7,13 @@
 #include <stdlib.h>
 
 
-#define BUF_SIZE 8192   /* Maximum size for exchanged string */
+#define BUF_SIZE 4096   /* Maximum size for exchanged string */
 
 #define CACHE_SIZE 64 // size of cache
 
 #define SLIP_SIZE 8 // number of cache line for slip space
 
-#define NUM_CPU 6 // 3 writers, 3 consumers
+#define NUM_CPU 2 // x writers, x consumers
 
 #define SERVER_CPU 6
 

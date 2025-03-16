@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
 
         int child_id[NUM_CPU] = {0};
 
-        for(int i = 0; i < 6; i++) {
+        for(int i = 0; i < NUM_CPU; i++) {
             child_id[i] = child_process(i);
         }
 

@@ -46,10 +46,11 @@ void child_process(int cpu_id) {
         int tail = 0;
 
         int cnt = 0;
+        int caught = 0;
         while(cnt < NUM_MSG) {
-            while(shmp->channels[cpu_id].buf[tail+CACHE_SIZE-1] != 0); // spin
+            while(shmp->channels[cpu_id].buf[tail+CACHE_SIZE-1] != 0) caught++; // spin
             // for(int i = tail; i < tail+CACHE_SIZE; i++) shmp->channels[cpu_id].buf[i] = 255; // produce, or write
-            shmp->channels[cpu_id].buf[tail+CACHE_SIZE-1] = 255; // if only writing the last word test
+            shmp->channels[cpu_id].buf[tail+CACHE_SIZE-1] = 255; // if only writing the last word
             tail = (tail+CACHE_SIZE) % BUF_SIZE; // move head
             //TODO: perhaps add delay here to simulate doing work
             cnt++;
@@ -118,7 +119,7 @@ int main(int argc, char* argv[]) {
         int cnt = 0;
 
         // Create children processes
-        for(int i = 0; i < 6; i++) {
+        for(int i = 0; i < NUM_CPU; i++) {
             child_process(i);
         }
 

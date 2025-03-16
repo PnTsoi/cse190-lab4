@@ -12,11 +12,11 @@
 
 #define SLIP_SIZE 8 // number of cache line for slip space
 
-#define NUM_CPU 6 // 3 writers, 3 consumers
+#define NUM_CPU 2 // x writers, x consumers
 
 #define SERVER_CPU 6
 
-#define SHM_PATH "/shmp"
+#define SHM_PATH "/shmd"
 
 #define MAX_QUEUE 150
 
