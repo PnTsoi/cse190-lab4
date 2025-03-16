@@ -17,11 +17,13 @@
 
 #define SERVER_CPU 6
 
-#define SHM_PATH "/shm"
+#define SHM_PATH "/shmb"
 
 #define MAX_QUEUE 150
 
 #define NUM_MSG 1000
+
+#define NUM_MEASUREMENTS 10000
 
 struct channel {
     unsigned char buf[BUF_SIZE];
